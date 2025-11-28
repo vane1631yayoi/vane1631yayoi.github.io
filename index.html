@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>旅遊行程計畫 - 現代卡片視覺版</title>
+    <!-- 引入 Tailwind CSS 確保響應式設計和清晰排版 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 載入 Inter 字體，確保清晰度 */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* 淺灰色背景 */
+            color: #1e293b; 
+        }
+        /* 主體色調：深藍/紫 */
+        .primary-bg {
+            background-color: #4f46e5; /* 靛藍色 */
+        }
+        .primary-text {
+            color: #4f46e5;
+        }
+        /* 導覽按鈕樣式 */
+        .tab-button {
+            transition: all 0.2s;
+            min-width: 130px;
+            height: 80px;
+            font-size: 1.125rem; /* text-lg */
+        }
+        .tab-active {
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
+            border: 2px solid white;
+            transform: scale(1.05);
+            font-weight: bold;
+        }
+        /* 行程卡片樣式 */
+        .itinerary-card {
+            border-left: 5px solid #4f46e5; 
+            transition: all 0.2s;
+        }
+        /* 可點擊地圖的元素樣式 */
+        .map-clickable {
+            cursor: pointer;
+            text-decoration: underline;
+            color: #1e40af; /* 深藍色 */
+            font-weight: bold;
+        }
+        /* 飯店資訊卡片 */
+        .hotel-card {
+            background-color: #eef2ff; /* 淺靛藍色 */
+            border: 1px solid #c7d2fe;
+        }
+    </style>
+    <script>
+        // 設定 Tailwind 配置以使用自定義顏色
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-blue': '#4f46e5',
+                        'secondary-card': '#eef2ff',
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    
+    <!-- JS 函式：開啟 Google Map -->
+    <script>
+        /**
+         * 開啟 Google Map 搜尋指定地點
+         * @param {string} query - 地圖搜尋的關鍵字
+         */
+        window.openGoogleMap = function(query) {
+            if (query) {
+                const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+                window.open(url, '_blank');
+            }
+        };
+    </script>
+
+    <!-- 主 Header 區域 (模擬圖片頂部) -->
+    <header class="primary-bg p-6 pb-20 shadow-2xl relative">
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-3xl font-extrabold text-white">
+                ✈️ 名古屋之旅
+            </h1>
+            <p class="text-lg text-indigo-200 mt-1">
+                3月13日 - 3月19日
+            </p>
+        </div>
+    </header>
+
+    <!-- 日期切換 Tab 區 (固定在頂部下方，可左右滑動) -->
+    <div class="sticky top-0 z-30 bg-primary-bg">
+        <nav id="day-tabs" class="flex overflow-x-auto whitespace-nowrap p-2 -mt-12 max-w-4xl mx-auto">
+            <!-- Tab 按鈕將由 JS 動態生成 -->
+        </nav>
+    </div>
+
+    <main id="itinerary-container" class="max-w-4xl mx-auto p-4 md:p-8 -mt-12">
+        <!-- 行程內容將由 JavaScript 渲染 -->
+    </main>
+
+    <footer class="p-6 mt-8 bg-gray-700 text-white text-center">
+        <p class="text-base">祝您旅途平安愉快！</p>
+    </footer>
+
+    <script>
+        const HOTEL_NAME = "Fresa Inn (INN 名古屋駅新幹線口)";
+        const HOTEL_ADDRESS = "Chome-4-15 Meieki, Nakamura Ward, Nagoya, Aichi 450-0002 日本";
+        const HOTEL_MAP_QUERY = "Fresa Inn 名古屋駅新幹線口";
+        
+        // 統一的數據結構 (包含地圖查詢關鍵字)
+        const travelItinerary = [
+            {
+                day: "Day 1",
+                date: "3/13 (三)",
+                theme: "TPE啟程與抵達名古屋",
+                weather: "晴朗, 18°C",
+                events: [
+                    { time: "17:15", activity: "桃園機場第二航廈集合", note: "請確認手機/手錶/電子機票", location: "桃園國際機場 第二航廈" },
+                    { time: "19:15", activity: "TPE 起飛", note: "前往名古屋中部國際機場" },
+                    { time: "21:05", activity: "抵達名古屋", note: "領取行李，準備 VISIT JAPAN QR CODE", location: "中部國際機場" },
+                    { time: "21:37", activity: "轉乘新幹線", note: "請指導轉乘名古屋鐵道", location: "名古屋車站" },
+                    { time: "22:57", activity: "入住 " + HOTEL_NAME, note: "請確認密碼或是否有電子鎖 OK", location: HOTEL_MAP_QUERY }
+                ],
+                hotel: HOTEL_ADDRESS,
+                hotelMapQuery: HOTEL_MAP_QUERY
+            },
+            {
+                day: "Day 2",
+                date: "3/14 (四)",
+                theme: "文化與歷史探索",
+                weather: "多雲, 15°C",
+                events: [
+                    { time: "8:00", activity: "享用早餐", note: "可選擇飯店或附近名古屋美食" },
+                    { time: "9:30", activity: "Shosu-an (日式庭院) 賞櫻", note: "八日單程票即可到達", location: "Shosu-an 日式庭院" },
+                    { time: "11:00", activity: "榮站", note: "準備搭乘交通工具", location: "栄駅" },
+                    { time: "11:40", activity: "松坂屋百貨公司", note: "前往松坂屋周邊", location: "松坂屋 名古屋" },
+                    { time: "12:40", activity: "午餐時間 (蓬萊軒鰻魚飯等)", note: "享用當地特色午餐", location: "蓬萊軒 本店" },
+                    { time: "13:23", activity: "榮站", note: "搭乘地鐵前往下一站", location: "栄駅" },
+                    { time: "14:24", activity: "豐田產業技術紀念館", note: "500日圓門票", location: "豐田產業技術紀念館" },
+                    { time: "16:30", activity: "藥妝店購物", note: "可購買常備藥品" },
+                    { time: "20:00", activity: "晚餐 (壽司/居酒屋)", note: "晚餐後回飯店休息" }
+                ],
+                hotel: HOTEL_ADDRESS,
+                hotelMapQuery: HOTEL_MAP_QUERY
+            },
+            {
+                day: "Day 3",
+                date: "3/15 (五)",
+                theme: "名古屋市區巡禮",
+                weather: "晴朗, 16°C",
+                events: [
+                    { time: "7:00", activity: "普利西亞飯店早餐", note: "當天早上再決定地點" },
+                    { time: "7:59", activity: "名古屋城本丸御殿", note: "使用交通一票", location: "名古屋城 本丸御殿" },
+                    { time: "9:00", activity: "參觀名古屋城", note: "360年歷史建築", location: "名古屋城" },
+                    { time: "12:00", activity: "午餐 (MOS Burger)", note: "簡單快速午餐", location: "MOS Burger" },
+                    { time: "12:30", activity: "大須商店街自由活動", note: "可逛街、購物或參拜大須觀音", location: "大須商店街" },
+                    { time: "15:00", activity: "咖啡館休息/下午茶", note: "輕鬆休息片刻，喝咖啡" },
+                    { time: "16:30", activity: "藥妝店購物", note: "自由採購時間" },
+                    { time: "19:30", activity: "晚餐 (近鐵地下街補給站)", note: "晚餐後回飯店", location: "近鐵地下街" }
+                ],
+                hotel: HOTEL_ADDRESS,
+                hotelMapQuery: HOTEL_MAP_QUERY
+            },
+            {
+                day: "Day 4",
+                date: "3/16 (六)",
+                theme: "戶外與藝術之旅",
+                weather: "多雲, 15°C",
+                events: [
+                    { time: "7:55", activity: "享用早餐 (本宮麵包或飯店)", note: "準備今天的戶外行程" },
+                    { time: "8:11", activity: "參加工藝體驗", note: "或參觀工藝館" },
+                    { time: "9:50", activity: "大須觀音前的Workman", note: "採購戶外用品或紀念品", location: "Workman 大須觀音" },
+                    { time: "11:00", activity: "午餐 (名店或百貨)", note: "210日圓公車可達" },
+                    { time: "12:40", activity: "名古屋站/松坂屋/大須商店街", note: "繼續購物或逛街", location: "名古屋車站" },
+                    { time: "13:40", activity: "二次拍照或神社會堂", note: "或前往松本清藥妝店", location: "松本清 藥妝" },
+                    { time: "15:30", activity: "茶道文化交流", note: "或參觀工藝館" },
+                    { time: "17:00", activity: "晚餐 (Joann)", note: "晚餐後回飯店" }
+                ],
+                hotel: HOTEL_ADDRESS,
+                hotelMapQuery: HOTEL_MAP_QUERY
+            },
+            {
+                day: "Day 5",
+                date: "3/17 (日)",
+                theme: "長途移動與歷史步道",
+                weather: "陣雨, 12°C",
+                events: [
+                    { time: "7:30-8:00", activity: "享用早餐 (gateway或飯店)", note: "今天行程較長，務必吃飽" },
+                    { time: "9:10", activity: "交通 (前往馬籠/妻籠)", note: "搭乘JR/巴士" },
+                    { time: "9:35", activity: "抵達馬籠/妻籠", note: "800年歷史老街，開始散步", location: "馬籠宿" },
+                    { time: "10:35", activity: "散步至妻籠", note: "無法搭乘公車或計程車", location: "妻籠宿" },
+                    { time: "14:00", activity: "午餐 (GOOD DAY Cafe作品)", note: "在特色咖啡館享受午餐" },
+                    { time: "14:25-17:30", activity: "交通返回名古屋站周邊", note: "搭乘地鐵/巴士/新幹線" },
+                    { time: "17:30", activity: "晚餐 (世界之山)", note: "結束一天的行程，準備回飯店" }
+                ],
+                hotel: HOTEL_ADDRESS,
+                hotelMapQuery: HOTEL_MAP_QUERY
+            },
+            {
+                day: "Day 6",
+                date: "3/18 (一)",
+                theme: "歸國前採購與整理",
+                weather: "晴朗, 17°C",
+                events: [
+                    { time: "8:00", activity: "享用早餐 (飯店)", note: "輕鬆開始一天的行程" },
+                    { time: "9:20", activity: "藥妝店/超市購物 (BigCamera)", note: "購買伴手禮和日常用品", location: "Big Camera 名古屋" },
+                    { time: "12:00", activity: "午餐 (近鐵地下街)", note: "在市區享用午餐", location: "近鐵地下街" },
+                    { time: "下午時段", activity: "自由活動/整理行李", note: "預留充足時間整理行李與休息" },
+                    { time: "17:00", activity: "晚餐 (最後晚餐)", note: "享受在日本的最後一晚" }
+                ],
+                hotel: HOTEL_ADDRESS,
+                hotelMapQuery: HOTEL_MAP_QUERY
+            },
+            {
+                day: "Day 7",
+                date: "3/19 (二)",
+                shortDate: "3/19",
+                theme: "👋 歸程日",
+                weather: "晴朗, 19°C",
+                events: [
+                    { time: "8:00", activity: "享用早餐", note: "退房前享用" },
+                    { time: "9:00", activity: "Check-out", note: "確認所有個人物品與行李" },
+                    { time: "9:11", activity: "交通 (前往名古屋站)", note: "搭乘交通工具" },
+                    { time: "10:30", activity: "交通 (前往機場)", note: "前往中部國際機場", location: "中部國際機場" },
+                    { time: "11:25", activity: "抵達機場", note: "辦理登機手續" },
+                    { time: "12:40", activity: "登機", note: "準備起飛" },
+                    { time: "14:40", activity: "TPE 降落", note: "平安抵達台灣", location: "桃園國際機場" }
+                ],
+                hotel: "本日為返程日，無住宿安排。祝您旅途順利！",
+                hotelMapQuery: null 
+            }
+        ];
+
+        const container = document.getElementById('itinerary-container');
+        const tabsContainer = document.getElementById('day-tabs');
+
+        /**
+         * 渲染特定日期的行程
+         * @param {number} dayIndex - 行程在 travelItinerary 陣列中的索引 (0 = Day 1)
+         */
+        function renderItinerary(dayIndex) {
+            const dayPlan = travelItinerary[dayIndex];
+            
+            // 清空舊內容
+            container.innerHTML = ''; 
+
+            // 1. 頂部日期/天氣卡片 (模擬圖片風格)
+            const dateWeatherCard = document.createElement('div');
+            dateWeatherCard.className = 'bg-white p-6 rounded-xl shadow-lg flex justify-between items-center mb-6';
+            dateWeatherCard.innerHTML = `
+                <div>
+                    <p class="text-3xl font-extrabold primary-text">${dayPlan.date}</p>
+                    <p class="text-xl text-gray-700">${dayPlan.theme}</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-4xl text-yellow-500">☀️</p>
+                    <p class="text-2xl font-bold primary-text">${dayPlan.weather.split(',')[1] || '17°C'}</p>
+                    <p class="text-sm text-gray-500">${dayPlan.weather.split(',')[0] || '晴朗'}</p>
+                </div>
+            `;
+            container.appendChild(dateWeatherCard);
+
+            // 2. 創建活動列表
+            dayPlan.events.forEach(event => {
+                const eventCard = document.createElement('div');
+                eventCard.className = 'itinerary-card bg-white p-4 rounded-xl shadow-md mb-4 flex space-x-4 items-start';
+                
+                // 處理活動名稱：如果是景點，則可點擊
+                let activityHTML;
+                const activityIcon = event.activity.includes("交通") ? '🚗' : 
+                                    event.activity.includes("餐") || event.activity.includes("享用早餐") ? '🍽️' : 
+                                    event.activity.includes("機場") || event.activity.includes("登機") ? '✈️' : 
+                                    event.activity.includes("購物") || event.activity.includes("採購") ? '🛍️' : 
+                                    '📍';
+
+                if (event.location) {
+                    // 使用 span 元素模擬連結，並綁定點擊事件
+                    activityHTML = `
+                        <span class="text-lg map-clickable hover:opacity-80 transition-opacity leading-snug" 
+                              onclick="openGoogleMap('${event.location.replace(/'/g, "\\'")}')">
+                            ${event.activity}
+                        </span>
+                    `;
+                } else {
+                    activityHTML = `<p class="text-lg font-bold text-gray-800 leading-snug">${event.activity}</p>`;
+                }
+
+                eventCard.innerHTML = `
+                    <!-- 左側：時間與圖標 -->
+                    <div class="flex-shrink-0 text-center w-20">
+                        <p class="text-lg font-bold text-gray-600">${event.time}</p>
+                        <p class="text-2xl mt-1">${activityIcon}</p>
+                    </div>
+                    
+                    <!-- 右側：活動內容與備註 -->
+                    <div class="flex-1 min-w-0">
+                        ${activityHTML}
+                        <!-- 備註 -->
+                        <p class="mt-1 text-base text-red-500 font-medium leading-snug">※ ${event.note}</p>
+                    </div>
+                `;
+                container.appendChild(eventCard);
+            });
+
+            // 3. 顯示飯店地址卡片
+            const hotelCard = document.createElement('div');
+            hotelCard.className = 'hotel-card mt-8 p-6 rounded-xl shadow-lg';
+            
+            if (dayIndex === travelItinerary.length - 1) { // 處理最後一天返程日
+                hotelCard.innerHTML = `
+                    <p class="text-xl font-bold primary-text">✅ 當日行程備註</p>
+                    <p class="text-lg mt-2 text-gray-700">${dayPlan.hotel}</p>
+                `;
+            } else { // 顯示住宿地址，使其可點擊
+                hotelCard.innerHTML = `
+                    <p class="text-xl font-bold primary-text">🏠 當晚入住飯店 (點擊地圖)</p>
+                    <p class="text-lg font-semibold mt-2 map-clickable hover:opacity-80 transition-opacity"
+                       onclick="openGoogleMap('${dayPlan.hotelMapQuery.replace(/'/g, "\\'")}')">
+                        ${HOTEL_NAME}
+                    </p>
+                    <p class="text-base mt-1 leading-relaxed text-gray-600">${dayPlan.hotel}</p>
+                `;
+            }
+            container.appendChild(hotelCard);
+
+            // 將視窗捲動到行程內容頂部
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        /**
+         * 處理點擊事件：切換選中的 Tab 和顯示內容
+         */
+        function selectDay(dayIndex) {
+            // 1. 更新按鈕的 Active 狀態
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('tab-active', 'primary-bg');
+                btn.classList.add('bg-white', 'text-gray-800');
+            });
+            // 為當前點擊的按鈕添加 active 樣式
+            const currentBtn = document.getElementById(`day-tab-${dayIndex}`);
+            if (currentBtn) {
+                currentBtn.classList.remove('bg-white', 'text-gray-800');
+                currentBtn.classList.add('tab-active', 'primary-bg', 'text-white');
+                
+                currentBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+
+            // 2. 渲染對應的行程內容
+            renderItinerary(dayIndex);
+        }
+
+        /**
+         * 動態生成頂部的 Tab 按鈕並綁定事件
+         */
+        function setupTabs() {
+            travelItinerary.forEach((dayPlan, index) => {
+                const button = document.createElement('button');
+                button.id = `day-tab-${index}`;
+                // 初始樣式
+                button.className = 'tab-button bg-white text-gray-800 rounded-xl shadow-md p-3 mx-2 flex-shrink-0';
+                button.innerHTML = `
+                    <p class="text-sm text-gray-500">${dayPlan.date.split(' ')[0]}</p>
+                    <p class="text-lg font-semibold">${dayPlan.day}</p>
+                `;
+                
+                // 點擊事件：呼叫 selectDay 函式
+                button.addEventListener('click', () => selectDay(index));
+                
+                tabsContainer.appendChild(button);
+            });
+            
+            // 預設選中並顯示 Day 1
+            selectDay(0);
+        }
+
+        // 頁面載入完成後執行設定
+        window.onload = setupTabs;
+
+    </script>
+</body>
+</html>
+
