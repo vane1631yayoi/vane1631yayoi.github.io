@@ -544,7 +544,10 @@
                     }
                 });
             
-        
+        function saveLuggageState() {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(LUGGAGE_CHECKLIST_DATA));
+        }
+                
             
             
                 
@@ -553,7 +556,11 @@
                 
             
         // 頁面載入完成後執行設定
-        window.onload = setupTabs;
+        window.onload = function(){
+            setupTabs();
+            loadLuggageState);
+        };
+                        
 
     </script>
 </body>
