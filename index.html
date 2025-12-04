@@ -530,7 +530,23 @@
         function loadLuggageState(){
             const savedState = localStorage.getItem(LOCAL_STORAGE_KEY);
             if (savedState) {
-                
+                const parsedState = JSON.parse(savedState);
+                LUGGAGE_CHECKLIST_DATA.carryOn.forEach(item => {
+                    const savedItem = parsedState.carryOn.find(s => s.id === item.id);
+                    if (savedItem){
+                        item.checked = savedItem.checked;
+                    }
+                });
+                LUGGAGE_CHECKLIST_DATA.checkedBaggage.forEach(item => {
+                    const savedItem = parsedState.checkedBaggage.find(s => s.id === item.id);
+                    if (savedItem) {                               
+                        item.checked = savedItem.checked;
+                    }
+                });
+            
+        
+            
+            
                 
 
             
