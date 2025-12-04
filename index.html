@@ -536,6 +536,18 @@
             `;
             return div;
         }
+
+        window.toggleLuggageItem = function(type, itemId) {
+            const list = LUGGAGE_CHECKLIST_DATA[type];
+            const item = list.find(i => i.id === itemId);
+            if (item) {
+                item.checked =  !item.checked;
+                saveLuggageStatee();
+                renderLuggageChecklist();
+            }
+        };
+        
+                    
         const LOCAL_STORAGE_KEY = 'travelLuggageState';
 
         function loadLuggageState(){
