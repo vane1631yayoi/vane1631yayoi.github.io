@@ -525,7 +525,12 @@
             `;
             return div;
         }
-        
+        const LOCAL_STORAGE_KEY = 'travelLuggageState';
+
+        function loadLuggageState(){
+            const savedState = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (savedState) {
+                
                 
 
             
