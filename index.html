@@ -476,7 +476,18 @@
             // 預設選中並顯示 Day 1
             selectDay(0);
         }
+        
+        // 新增：行李清單相關函式
+        window.openLuggageChecklist = function(show) {
+            const modal = document.getElementById('luggage-checklist-modal');
+            const isShowing = modal.classList.contains('show');
+            if (show === undifined){
+                show = !isShowing;
+            }
 
+            
+                
+            
         // 頁面載入完成後執行設定
         window.onload = setupTabs;
 
