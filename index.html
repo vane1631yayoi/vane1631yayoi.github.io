@@ -156,12 +156,21 @@
     <!-- 主 Header 區域 (模擬圖片頂部) -->
     <header class="primary-bg p-6 pb-20 shadow-2xl relative">
         <div class="max-w-4xl mx-auto">
-            <h1 class="text-3xl font-extrabold text-white">
-                ✈️ 名古屋之旅
-            </h1>
-            <p class="text-lg text-indigo-200 mt-1">
-                3月13日 - 3月19日
-            </p>
+            <div>
+                <h1 class="text-3xl font-extrabold text-white">
+                    ✈️ 名古屋之旅
+                </h1>
+                <p class="text-lg text-indigo-200 mt-1">
+                    3月13日 - 3月19日
+                </p>
+            </div>
+            <a href="#" onclick="openLuggageChecklist(); return false;" 
+                class="absolute top-6 right-6 md:right-10 text-white hover:text-indigo-200 transition-colors duration-200"
+                title="行李確認清單">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                </svg>
+            </a>
         </div>
     </header>
 
