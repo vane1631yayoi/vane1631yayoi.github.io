@@ -529,7 +529,7 @@
                            id="luggage-${type}-${item.id}" 
                            class="luggage-item-checkbox" 
                            ${item.checked ? 'checked' : ''} 
-                           onchange="toggleLuggageItem('${type}', "${item.id}")">
+                           onchange="toggleLuggageItem('${type}', '${item.id}')">
                     <span class="luggage-item-text ${item.checked ? 'checked' : ''}">${item.name}</span>
                 </label>
             `;
@@ -541,7 +541,7 @@
             const item = list.find(i => i.id === itemId);
             if (item) {
                 item.checked =  !item.checked;
-                saveLuggageStatee();
+                saveLuggageState();
                 renderLuggageChecklist();
             }
         };
