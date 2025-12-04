@@ -484,6 +484,18 @@
             if (show === undifined){
                 show = !isShowing;
             }
+            if (show) {
+                renderLuggageChecklist();
+                model.classList.add('show');
+                document.body.style.overflow = 'hidden'; //防止背景滾動
+                document.getElementById('last-updated-time').textContent = new Date().toLocaleString();
+            } else {
+                model.classList.remove('show');
+                document.body.style.oevrflow = '';
+            }
+        };
+        
+                
 
             
                 
