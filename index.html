@@ -179,6 +179,30 @@
     <footer class="p-6 mt-8 bg-gray-700 text-white text-center">
         <p class="text-base">祝您旅途平安愉快！</p>
     </footer>
+    
+    <!-- 新增：行李清單模態視窗 -->
+    <div id="luggage-checklist-modal" class="modal-overlay">
+        <div class="modal-content w-11/12 md:w-2/3 lg:w-1/2">
+            <span class="modal-close-button" onclick="openLuggageChecklist(false);">&times;</span>
+            <h2 class="text-2xl font-bold primary-text mb-4">📦 行李確認清單</h2>
+            <div class="mb-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">手提行李 (Carry-on)</h3>
+                <div id='carry-on list" clasee="space-y-2">
+                </div>
+            </div>
+            <div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">托運行李 (Checked Baggaue)</h3>
+                <div id='checked-baggage-list" clasee="space-y-2">
+                </div>
+            </div>
+            <div class="mt-6 text-sm text-gray-500">
+                <p>最後更新：<span id="last-updated-time"></span></p>
+                <p>狀態會自動儲存。</p>
+            </div>
+        </div>
+    </div>            
+                    
+    
 
     <script>
         const HOTEL_NAME = "Fresa Inn (INN 名古屋駅櫻通口)";
