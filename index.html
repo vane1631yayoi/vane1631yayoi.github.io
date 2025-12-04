@@ -520,7 +520,7 @@
                            id="luggage-${type}-${item.id}" 
                            class="luggage-item-checkbox" 
                            ${item.checked ? 'checked' : ''} 
-                           inchange="toggleLuggageItem('${type}', "${item.id}')">
+                           onchange="toggleLuggageItem('${type}', "${item.id}")">
                     <span class="luggage-item-text ${item.checked ? 'checked' : ''}">${item.name}</span>
                 </label>
             `;
@@ -544,6 +544,8 @@
                         item.checked = savedItem.checked;
                     }
                 });
+            }
+        }
             
         function saveLuggageState() {
             localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(LUGGAGE_CHECKLIST_DATA));
@@ -559,7 +561,7 @@
         // 頁面載入完成後執行設定
         window.onload = function(){
             setupTabs();
-            loadLuggageState);
+            loadLuggageState();
         };
                         
 
