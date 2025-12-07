@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>旅遊行程計畫 - 現代卡片視覺版</title>
+    <!-- 引入 Tailwind CSS 確保響應式設計和清晰排版 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 載入 Inter 字體，確保清晰度 */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* 淺灰色背景 */
+            color: #1e293b; 
+        }
+        /* 主體色調：深藍/紫 */
+        .primary-bg {
+            background-color: #4f46e5; /* 靛藍色 */
+        }
+        .primary-text {
+            color: #4f46e5;
+        }
+        /* 導覽按鈕樣式 */
+        .tab-button {
+            transition: all 0.2s;
+            min-width: 130px;
+            height: 80px;
+            font-size: 1.125rem; /* text-lg */
+        }
+        .tab-active {
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
+            border: 2px solid white;
+            transform: scale(1.05);
+            font-weight: bold;
+        }
+        /* 行程卡片樣式 */
+        .itinerary-card {
+            border-left: 5px solid #4f46e5; 
+            transition: all 0.2s;
+        }
+        /* 可點擊地圖的元素樣式 */
+        .map-clickable {
+            cursor: pointer;
+            text-decoration: underline;
+            color: #1e40af; /* 深藍色 */
+            font-weight: bold;
+        }
+        /* 飯店資訊卡片 */
+        .hotel-card {
+            background-color: #eef2ff; /* 淺靛藍色 */
+            border: 1px solid #c7d2fe;
+        }
+        /* 新增：模態視窗樣式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6); /* 半透明黑色遮罩 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000; /* 確保在最上層 */
+            visibility: hidden; /* 預設隱藏 */
+            opacity: 0; /* 預設完全透明 */
+            transition: visibility 0.3s, opacity 0.3s;
+        }
+        .modal-overlay.show {
+            visibility: visible;
+            opacity: 1;
+        }    
+        .modal-content {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); /* shadow-2xl */
+            max-width: 90%;
+            max-height: 90%;
+            overflow-y: auto; /* 內容過多時可滾動 */
+            position: relative;
+            transform: translateY(-50px); /* 初始位置稍微向上 */
+            transition: transform 0.3s ease-out;
+        }      
+        .modal-overlay.show .modal-content {
+            transform: translateY(0); /* 顯示時回到正常位置 */
+        }
+        /* 關閉按鈕 */
+        .modal-close-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 1.5rem;
+            line-height: 1;
+            cursor: pointer;
+            color: #6b7280; /* text-gray-500 */
+            transition: color 0.2s;
+        }
+        .modal-close-button:hover {
+            color: #1f2937; /* text-gray-800 */
+        }
+        /* 行李清單項目樣式 */
+        .luggage-item-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 0.5rem 0;
+        }
+        .luggage-item-checkbox {
+            margin-right: 0.75rem;
+            width: 1.25rem; /* h-5 w-5 */
+            height: 1.25rem;
+            accent-color: #4f46e5; /* primary-blue */
+        }
+        .luggage-item-text {
+            flex-grow: 1;
+            font-size: 1rem;
+            color: #374151; /* text-gray-700 */
+        }
+        .luggage-item-text.checked {
+            text-decoration: line-through;
+            color: #9ca3af; /* text-gray-400 */
+        }        
+            
+    </style>
+    <script>
+        // 設定 Tailwind 配置以使用自定義顏色
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-blue': '#4f46e5',
+                        'secondary-card': '#eef2ff',
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    
+    <!-- JS 函式：開啟 Google Map -->
+    <script>
+        /**
+         * 開啟 Google Map 搜尋指定地點
+         * @param {string} query - 地圖搜尋的關鍵字
+         */
+        window.openGoogleMap = function(query) {
+            if (query) {
+                const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+                window.open(url, '_blank');
+            }
+        };
+    </script>
+
+    <!-- 主 Header 區域 (模擬圖片頂部) -->
+    <header class="primary-bg p-6 pb-20 shadow-2xl relative">
+        <div class="max-w-4xl mx-auto">
+            <div>
+                <h1 class="text-3xl font-extrabold text-white">
+                    ✈️ 名古屋之旅
+                </h1>
+                <p class="text-lg text-indigo-200 mt-1">
+                    3月13日 - 3月19日
+                </p>
+            </div>
+            <a href="#" onclick="openLuggageChecklist(); return false;" 
+                class="absolute top-6 right-6 md:right-10 text-white hover:text-indigo-200 transition-colors duration-200"
+                title="行李確認清單">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <!-- 日期切換 Tab 區 (固定在頂部下方，可左右滑動) -->
+    <div class="sticky top-0 z-30 bg-primary-bg">
+        <nav id="day-tabs" class="flex overflow-x-auto whitespace-nowrap p-2 -mt-12 max-w-4xl mx-auto">
+            <!-- Tab 按鈕將由 JS 動態生成 -->
+        </nav>
+    </div>
+
+    <main id="itinerary-container" class="max-w-4xl mx-auto p-4 md:p-8 -mt-12">
+        <!-- 行程內容將由 JavaScript 渲染 -->
+    </main>
+
+    <footer class="p-6 mt-8 bg-gray-700 text-white text-center">
+        <p class="text-base">祝您旅途平安愉快！</p>
+    </footer>
+    
+    <!-- 新增：行李清單模態視窗 -->
+    <div id="luggage-checklist-modal" class="modal-overlay">
+        <div class="modal-content w-11/12 md:w-2/3 lg:w-1/2">
+            <span class="modal-close-button" onclick="openLuggageChecklist(false);">&times;</span>
+            <h2 class="text-2xl font-bold primary-text mb-4">📦 行李確認清單</h2>
+            <div class="mb-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">手提行李 (Carry-on)</h3>
+                <div id='carry-on-list' class="space-y-2">
+                </div>
+            </div>
+            <div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">托運行李 (Checked Baggaue)</h3>
+                <div id='checked-baggage-list' class="space-y-2">
+                </div>
+            </div>
+            <div class="mt-6 text-sm text-gray-500">
+                <p>最後更新：<span id="last-updated-time"></span></p>
+                <p>狀態會自動儲存。</p>
+            </div>
+        </div>
+    </div>            
+                    
+    
+
+    <script>
+        const HOTEL_NAME = "Fresa Inn (INN 名古屋駅櫻通口)";
+        const HOTEL_ADDRESS = "4 Chome-4-15 Meieki, Nakamura Ward, Nagoya, Aichi 450-0002日本";
+        const HOTEL_MAP_QUERY = "Fresa Inn 名古屋駅櫻通口";
+        
+        const LUGGAGE_CHECKLIST_DATA = {
+            carryOn: [
+                { id: 'passport', name: '護照', checked: false },
+                { id: 'insurance', name: '不便險 (醫療險建議保日本政府)', checked: false},
+                { id: 'photo', name: '大頭照/護照影本', checked: false},
+                { id: 'phone', name: '手機', checked: false},
+                { id: 'money', name: '日幣現金', checked: false},
+                { id: 'card', name: '信用卡', checked: false},
+                { id: 'charger', name: '充電器/行動電源/iPad', checked: false},
+                { id: 'internet', name: '漫遊/esim/sim', checked: false}
+
+            ],
+            checkedBaggage: [
+                { id: 'clothes', name: '替換衣物(飯店有洗衣機)', checked: false },
+                { id: 'warmer', name: '保暖衣物/帽子/圍巾(可當地購入)', checked: false },
+                { id: 'bag', name: '壓縮袋/行李袋', checked: false },                
+                { id: 'booth', name: '個人衛生用品(飯店有洗漱用品)', checked: false },                
+                { id: 'umbrella', name: '傘(依天氣決定，可當地買)', checked: false },                               
+                                
+                
+            ]
+        };
+
+        
+        // 統一的數據結構 (包含地圖查詢關鍵字)
+        const travelItinerary = [
+            {
+                day: "Day 1",
+                date: "3/13 (五)",
+                theme: "TPE啟程與抵達名古屋",
+                weather: "晴朗, 18°C",
+                events: [
+                    { time: "15:15", activity: "桃園機場第二航廈集合", note: "請確認手機/護照/電子機票", location: "桃園國際機場 第二航廈" },
+                    { time: "17:15", activity: "TPE 起飛", note: "班機代號:CI150" },
+                    { time: "19:00", activity: "晚餐", note: "飛機餐" },
+                    { time: "21:05", activity: "抵達名古屋", note: "領取行李，準備 VISIT JAPAN QR CODE", location: "中部國際機場" },
+                    { time: "21:37", activity: "轉乘名鐵", note: "需要買對號座", location: "名古屋車站" },
+                    { time: "22:57", activity: "入住 " + HOTEL_NAME, note: "中央剪票口出站走4分鐘", location: HOTEL_MAP_QUERY }
+                ],
+                hotel: HOTEL_ADDRESS,
+                hotelMapQuery: HOTEL_MAP_QUERY
+            },
+            {
+                day: "Day 2",
+                date: "3/14 (六)",
+                theme: "文化與歷史探索",
+                weather: "多雲, 15°C",
+                events: [
+                    { time: "8:00", activity: "早餐", note: "Komeda客多美咖啡 OR しんぱち食堂 日式烤魚早餐"},
+                    { time: "9:30", activity: "名古屋科學館", note: "提前買六/日的周末環保券(可搭地鐵/巴士)", location: "名古屋科學館" },
+                    { time: "12:00", activity: "午餐", note: "飛騨牛燒肉 午間套餐", location: "燒肉 馬喰一代 名古屋EAST" },
+                    { time: "13:30", activity: "熱田神宮", note: "搭乘名城線前往 熱田神宮西", location: "熱田神宮" },
+                    { time: "14:30", activity: "熱田神宮 寶物館", note: "500日圓門票", location: "熱田神宮 寶物館" },
+                    { time: "16:00", activity: "Aeon購物 或 榮町逛街", note: "Aeon有超市/榮有百貨" },
+                    { time: "19:00", activity: "晚餐", note: "德兵衛迴轉壽司 OR 美登利壽司" }
+                ],
+                hotel: HOTEL_ADDRESS,
+                hotelMapQuery: HOTEL_MAP_QUERY
+            },
+            {
+                day: "Day 3",
+                date: "3/15 (日)",
+                theme: "吉卜力公園之旅(攜帶護照)",
+                weather: "晴朗, 16°C",
+                events: [
+                    { time: "7:00", activity: "早餐", note: "便利商店 OR 前一天先買" },
+                    { time: "7:30", activity: "名古屋車站 --> 藤丘(東山線) --> 愛地球紀念公園(LINIMO)", note: "使用周末環保券+SUICA", location: "名古屋車站" },
+                    { time: "9:00", activity: "吉卜力公園 大倉庫", note: "須帶護照驗票", location: "Ghibli’s Grand Warehouse" },
+                    { time: "12:00", activity: "午餐", note: "園區內的MOS Burge", location: "モスバーガー キッチンカーKC3" },
+                    { time: "12:30", activity: "魔女之谷", note: "魔女之家 (安雅與魔女)/ 霍爾的移動城堡/ 歐奇諾之家 (天空之城)", location: "魔女の谷" },
+                    { time: "15:00", activity: "動動力之森 (搭公車)", note: "小月與小梅之家" , location: "どんどこ森"},
+                    { time: "15:30", activity: "魔法之里(搭公車)", note: "時間不夠可跳過" , location: "もののけの里" },
+                    { time: "16:20", activity: "青春之丘" , note: "貓咪事務所(貓的報恩)/ 地球屋(心之谷)" , location: "青春の丘" },
+                    { time: "19:30", activity: "晚餐 (近清水站)", note: "串銀 坊(烤雞肉串) OR なまらむーちょ(羊肉燒肉)", location: "なまらむーちょ" }
+                ],
+                hotel: HOTEL_ADDRESS,
+                hotelMapQuery: HOTEL_MAP_QUERY
+            },
+            {
+                day: "Day 4",
+                date: "3/16 (一)",
+                theme: "犬山城之旅",
+                weather: "多雲, 15°C",
+                events: [
+                    { time: "8:20", activity: "早餐 + 參加六之市", note: "刷SUICA搭名鐵線到 本笠寺(4號月台)", location: "笠寺観音（笠覆寺）"  },
+                    { time: "9:00", activity: "Workman採買防水裝備", note: "防水鞋/ 防風防水外套", location: "ワークマン 名古屋笠寺店" },
+                    { time: "11:00", activity: "午餐 ", note: "harbs 午間套餐(不能訂位)", location: "ハーブス 栄本店" },
+                    { time: "12:30", activity: "買犬山城套票", note: "名鐵售票口，順便去買艾許奶油泡芙", location: "名古屋車站" },
+                    { time: "13:40", activity: "犬山城", note: "搭特急到犬山遊園地", location: "犬山城" },
+                    { time: "15:00", activity: "城下町逛街", note: "三光稻荷神社 體驗洗錢(100羊)" },
+                    { time: "17:00", activity: "晚餐", note: "蓬ぜん 鰻魚料, 順路買 尾張犬山菓匠", location:"蓬ぜん 鰻魚料理" }
+                ],
+                hotel: HOTEL_ADDRESS,
+                hotelMapQuery: HOTEL_MAP_QUERY
+            },
+            {
+                day: "Day 5",
+                date: "3/17 (二)",
+                theme: "中山道 - 妻籠宿與馬龍宿",
+                weather: "陣雨, 12°C",
+                events: [
+                    { time: "7:30", activity: "早餐", note: "前一天先點餐，車上吃", location: "マクドナルド 名古屋ゲートウォーク店" },
+                    { time: "8:00", activity: "交通 (前往馬籠)", note: "搭乘JR信濃 到中川津車站 -> 轉搭 Magome巴士 到 Magome " },
+                    { time: "9:35", activity: "馬籠宿 散步", note: "可以買中山道證明", location: "馬籠宿" },
+                    { time: "10:30", activity: "午餐", note: "お食事処 樹梨, 不餓可以不吃或點五平餅等小東西", location: "お食事処 樹梨" },
+                    { time: "11:30", activity: "馬籠宿 走到 妻籠宿", note: "6.5km" },
+                    { time: "14:30", activity: "妻籠宿 散步", note: "可蓋章中山道證明", location: "GOOD DAY Cafe" },                    
+                    { time: "15:20", activity: "交通(回名古屋車站)", note: "搭高速巴士 需預約" , location: "〒399-5302 長野県木曽郡南木曽町吾妻"},
+                    { time: "17:30", activity: "晚餐", note: "矢場豬排 or 法式豬排 katuretu matumura or 雞翅 世界的山匠", location: "カツレツMATUMURA" },
+                    { time: "有力氣的話", activity: "泡湯", note: "Canal resort(名古屋駛) or Urban Quar(榮)泡湯，有無料送迎巴士!", location: "キャナル・リゾート" }                  
+                ],
+                hotel: HOTEL_ADDRESS,
+                hotelMapQuery: HOTEL_MAP_QUERY
+            },
+            {
+                day: "Day 6",
+                date: "3/18 (三)",
+                theme: "市集+逛街日",
+                weather: "晴朗, 17°C",
+                events: [
+                    { time: "7:50", activity: "早餐", note: "我先提早去排隊", location: "天然酵母の食パン専門店 つばめパン＆Milk 名駅店" },
+                    { time: "9:30", activity: "大須觀音骨董市集 + 商圈", note: "青柳總本家/築地銀章魚/覺王山水果大福/osu bakery", location: "大須観音" },
+                    { time: "11:30", activity: "午餐", note: "大須觀音 suzuya炸豬排(要排隊) OR 金山 燒肉二郎(可預約)", location: "焼肉&手打ち冷麺 二郎 KANAYAMA" },
+                    { time: "下午時段", activity: "自由活動/整理行李", note: "預留充足時間整理行李與休息" },
+                    { time: "17:00", activity: "晚餐", note: "自行處理" }
+                ],
+                hotel: HOTEL_ADDRESS,
+                hotelMapQuery: HOTEL_MAP_QUERY
+            },
+            {
+                day: "Day 7",
+                date: "3/19 (四)",
+                shortDate: "3/19",
+                theme: "👋 歸程日",
+                weather: "晴朗, 19°C",
+                events: [
+                    { time: "8:00", activity: "Check out", note: "檢查手機錢包護照 & 行李秤重" },
+                    { time: "8:30", activity: "搭乘名鐵特急(部分對號座)名古屋機", note: "可刷suica坐自由座" },
+                    { time: "9:11", activity: "華航 CHECK IN ", location: "抵達名古屋機場 第一航廈" },
+                    { time: "9:30", activity: "機場採購", note: "仙貝蝦之里", location: "仙貝蝦之里" },
+                    { time: "10:00", activity: "午餐", note: "T1 4F有很多選擇", location:"半藏製麵" },
+                    { time: "10:30", activity:"過安檢", note: "後面有免稅購物" },
+                    { time: "11:25", activity: "登機", note: "12:05 起飛" },
+                    { time: "14:40", activity: "TPE 降落", note: "平安抵達台灣", location: "桃園國際機場" }
+                ],
+                hotel: "本日為返程日，無住宿安排。祝您旅途順利！",
+                hotelMapQuery: null 
+            }
+        ];
+
+        const container = document.getElementById('itinerary-container');
+        const tabsContainer = document.getElementById('day-tabs');
+
+        /**
+         * 渲染特定日期的行程
+         * @param {number} dayIndex - 行程在 travelItinerary 陣列中的索引 (0 = Day 1)
+         */
+        function renderItinerary(dayIndex) {
+            const dayPlan = travelItinerary[dayIndex];
+            
+            // 清空舊內容
+            container.innerHTML = ''; 
+
+            // 1. 頂部日期/天氣卡片 (模擬圖片風格)
+            const dateWeatherCard = document.createElement('div');
+            dateWeatherCard.className = 'bg-white p-6 rounded-xl shadow-lg flex justify-between items-center mb-6';
+            dateWeatherCard.innerHTML = `
+                <div>
+                    <p class="text-3xl font-extrabold primary-text">${dayPlan.date}</p>
+                    <p class="text-xl text-gray-700">${dayPlan.theme}</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-4xl text-yellow-500">☀️</p>
+                    <p class="text-2xl font-bold primary-text">${dayPlan.weather.split(',')[1] || '17°C'}</p>
+                    <p class="text-sm text-gray-500">${dayPlan.weather.split(',')[0] || '晴朗'}</p>
+                </div>
+            `;
+            container.appendChild(dateWeatherCard);
+
+            // 2. 創建活動列表
+            dayPlan.events.forEach(event => {
+                const eventCard = document.createElement('div');
+                eventCard.className = 'itinerary-card bg-white p-4 rounded-xl shadow-md mb-4 flex space-x-4 items-start';
+                
+                // 處理活動名稱：如果是景點，則可點擊
+                let activityHTML;
+                const activityIcon = event.activity.includes("交通") ? '🚗' : 
+                                    event.activity.includes("餐") || event.activity.includes("享用早餐") ? '🍽️' : 
+                                    event.activity.includes("機場") || event.activity.includes("登機") ? '✈️' : 
+                                    event.activity.includes("購物") || event.activity.includes("採購") ? '🛍️' : 
+                                    '📍';
+
+                if (event.location) {
+                    // 使用 span 元素模擬連結，並綁定點擊事件
+                    activityHTML = `
+                        <span class="text-lg map-clickable hover:opacity-80 transition-opacity leading-snug" 
+                              onclick="openGoogleMap('${event.location.replace(/'/g, "\\'")}')">
+                            ${event.activity}
+                        </span>
+                    `;
+                } else {
+                    activityHTML = `<p class="text-lg font-bold text-gray-800 leading-snug">${event.activity}</p>`;
+                }
+
+                eventCard.innerHTML = `
+                    <!-- 左側：時間與圖標 -->
+                    <div class="flex-shrink-0 text-center w-20">
+                        <p class="text-lg font-bold text-gray-600">${event.time}</p>
+                        <p class="text-2xl mt-1">${activityIcon}</p>
+                    </div>
+                    
+                    <!-- 右側：活動內容與備註 -->
+                    <div class="flex-1 min-w-0">
+                        ${activityHTML}
+                        <!-- 備註 -->
+                        <p class="mt-1 text-base text-gray-500 font-medium leading-snug">▶ ${event.note}</p>
+                    </div>
+                `;
+                container.appendChild(eventCard);
+            });
+
+            // 3. 顯示飯店地址卡片
+            const hotelCard = document.createElement('div');
+            hotelCard.className = 'hotel-card mt-8 p-6 rounded-xl shadow-lg';
+            
+            if (dayIndex === travelItinerary.length - 1) { // 處理最後一天返程日
+                hotelCard.innerHTML = `
+                    <p class="text-xl font-bold primary-text">✅ 當日行程備註</p>
+                    <p class="text-lg mt-2 text-gray-700">${dayPlan.hotel}</p>
+                `;
+            } else { // 顯示住宿地址，使其可點擊
+                hotelCard.innerHTML = `
+                    <p class="text-xl font-bold primary-text">🏠 當晚入住飯店 (點擊地圖)</p>
+                    <p class="text-lg font-semibold mt-2 map-clickable hover:opacity-80 transition-opacity"
+                       onclick="openGoogleMap('${dayPlan.hotelMapQuery.replace(/'/g, "\\'")}')">
+                        ${HOTEL_NAME}
+                    </p>
+                    <p class="text-base mt-1 leading-relaxed text-gray-600">${dayPlan.hotel}</p>
+                `;
+            }
+            container.appendChild(hotelCard);
+
+            // 將視窗捲動到行程內容頂部
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        /**
+         * 處理點擊事件：切換選中的 Tab 和顯示內容
+         */
+        function selectDay(dayIndex) {
+            // 1. 更新按鈕的 Active 狀態
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('tab-active', 'primary-bg');
+                btn.classList.add('bg-white', 'text-gray-800');
+            });
+            // 為當前點擊的按鈕添加 active 樣式
+            const currentBtn = document.getElementById(`day-tab-${dayIndex}`);
+            if (currentBtn) {
+                currentBtn.classList.remove('bg-white', 'text-gray-800');
+                currentBtn.classList.add('tab-active', 'primary-bg', 'text-white');
+                
+                currentBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+
+            // 2. 渲染對應的行程內容
+            renderItinerary(dayIndex);
+        }
+
+        /**
+         * 動態生成頂部的 Tab 按鈕並綁定事件
+         */
+        function setupTabs() {
+            travelItinerary.forEach((dayPlan, index) => {
+                const button = document.createElement('button');
+                button.id = `day-tab-${index}`;
+                // 初始樣式
+                button.className = 'tab-button bg-white text-gray-800 rounded-xl shadow-md p-3 mx-2 flex-shrink-0';
+                button.innerHTML = `
+                    <p class="text-sm text-gray-500">${dayPlan.date.split(' ')[0]}</p>
+                    <p class="text-lg font-semibold">${dayPlan.day}</p>
+                `;
+                
+                // 點擊事件：呼叫 selectDay 函式
+                button.addEventListener('click', () => selectDay(index));
+                
+                tabsContainer.appendChild(button);
+            });
+            
+            // 預設選中並顯示 Day 1
+            selectDay(0);
+        }
+        
+        // 新增：行李清單相關函式
+        window.openLuggageChecklist = function(show) {
+            const modal = document.getElementById('luggage-checklist-modal');
+            const isShowing = modal.classList.contains('show');
+            if (show === undefined){
+                show = !isShowing;
+            }
+            if (show) {
+                renderLuggageChecklist();
+                modal.classList.add('show');
+                document.body.style.overflow = 'hidden'; //防止背景滾動
+                document.getElementById('last-updated-time').textContent = new Date().toLocaleString();
+            } else {
+                modal.classList.remove('show');
+                document.body.style.overflow = '';
+            }
+        };
+        
+        function renderLuggageChecklist() {
+            const carryOnListDiv = document.getElementById('carry-on-list');
+            const checkedBaggageListDiv = document.getElementById('checked-baggage-list');
+            carryOnListDiv.innerHTML = '';
+            checkedBaggageListDiv.innerHTML = '';
+
+            LUGGAGE_CHECKLIST_DATA.carryOn.forEach(item => {
+                carryOnListDiv.appendChild(createLuggageItemElement(item, 'carryOn'));
+            });
+            LUGGAGE_CHECKLIST_DATA.checkedBaggage.forEach(item => {
+                checkedBaggageListDiv.appendChild(createLuggageItemElement(item, 'checkedBaggage'));
+            });                    
+        }
+
+
+        function createLuggageItemElement(item, type) {
+            const div = document.createElement('div');
+            div.className = 'luggage-item';
+            div.innerHTML = `
+                <label for="luggage-${type}-${item.id}" class="luggage-item-label">
+                    <input type="checkbox" 
+                           id="luggage-${type}-${item.id}" 
+                           class="luggage-item-checkbox" 
+                           ${item.checked ? 'checked' : ''} 
+                           onchange="toggleLuggageItem('${type}', '${item.id}')">
+                    <span class="luggage-item-text ${item.checked ? 'checked' : ''}">${item.name}</span>
+                </label>
+            `;
+            return div;
+        }
+
+        window.toggleLuggageItem = function(type, itemId) {
+            const list = LUGGAGE_CHECKLIST_DATA[type];
+            const item = list.find(i => i.id === itemId);
+            if (item) {
+                item.checked =  !item.checked;
+                saveLuggageState();
+                renderLuggageChecklist();
+            }
+        };
+        
+                    
+        const LOCAL_STORAGE_KEY = 'travelLuggageState';
+
+        function loadLuggageState(){
+            const savedState = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (savedState) {
+                const parsedState = JSON.parse(savedState);
+                LUGGAGE_CHECKLIST_DATA.carryOn.forEach(item => {
+                    const savedItem = parsedState.carryOn.find(s => s.id === item.id);
+                    if (savedItem){
+                        item.checked = savedItem.checked;
+                    }
+                });
+                LUGGAGE_CHECKLIST_DATA.checkedBaggage.forEach(item => {
+                    const savedItem = parsedState.checkedBaggage.find(s => s.id === item.id);
+                    if (savedItem) {                               
+                        item.checked = savedItem.checked;
+                    }
+                });
+            }
+        }
+            
+        function saveLuggageState() {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(LUGGAGE_CHECKLIST_DATA));
+        }
+                
+            
+            
+                
+
+            
+                
+            
+        // 頁面載入完成後執行設定
+        window.onload = function(){
+            setupTabs();
+            loadLuggageState();
+        };
+                        
+
+    </script>
+</body>
+</html>
