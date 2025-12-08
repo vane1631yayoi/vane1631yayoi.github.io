@@ -494,15 +494,14 @@
 
         let PEOPLE_LUGGAGE_STATE = initialPeopleData; // 儲存所有人的狀態
         let currentPersonId = null; // 當前開啟清單的人 ID
-        let isModalContentReady = false; // <-- 新增：追蹤資料是否已成功載入至少一次
-
+       
         /**
          * 處理 Firebase 資料變動，並更新 UI
          * @param {Object} docSnapshot - Firestore Document Snapshot
          */
         window.handleLuggageSnapshot = function(docSnapshot) {
             const modalFooter = document.getElementById('modal-footer');
-            isModalContentReady = true; // <-- 資料回傳，設定為 True
+            
 
             if (docSnapshot.exists()) {
                 const data = docSnapshot.data().checklists;
@@ -551,7 +550,7 @@
                 // 使用 onSnapshot 監聽即時更新
                 window.onSnapshot(docRef, window.handleLuggageSnapshot, (error) => {
                     console.error("Error listening to luggage snapshot:", error);
-                    isModalContentReady = true; // 即使失敗，也要結束載入狀態
+                    
                     // 發生錯誤時，顯示錯誤訊息，清除 Spinner
                     window.renderErrorState("資料庫連線失敗或權限不足，無法載入清單。");
                 });
@@ -608,19 +607,13 @@
          */
         window.openLuggageChecklist = function(show) {
             const modal = document.getElementById('luggage-checklist-modal');
-            const contentArea = document.getElementById('modal-content-area');
-
+            
             if (show) {
                 currentPersonId = null; // 重置到人名列表視圖
                 modal.classList.add('show');
                 document.body.style.overflow = 'hidden'; 
                 
-                // 修正重點：無論資料是否載入完成，都先顯示 Spinner
-                contentArea.innerHTML = `<div class="text-center p-8"><div class="spinner mx-auto mb-4"></div><p class="text-gray-600">正在載入資料中...</p></div>`;
-
-                // 如果資料已經載入過，且 Modal 已開，立即渲染內容，否則等待 onSnapshot 回調
-                if (isModalContentReady) {
-                    window.renderPeopleList();
+                window.renderPeopleList();
                 }
 
             } else {
@@ -641,9 +634,6 @@
          */
         window.renderPeopleList = function() {
             const contentArea = document.getElementById('modal-content-area');
-            
-            // 由於 openLuggageChecklist 會先顯示 Spinner，這裡不需要再檢查 isModalContentReady
-            // 只要 onSnapshot 成功回調，就會呼叫到這裡，渲染正確的內容。
 
             let html = `
                 <h2 class="text-2xl font-bold primary-text mb-6">📦 選擇成員清單</h2>
