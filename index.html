@@ -466,9 +466,14 @@
         // 預設的行李清單模板
         const LUGGAGE_CHECKLIST_TEMPLATE = {
             carryOn: [
-                { id: crypto.randomUUID(), name: '護照/電子機票', checked: false, type: 'carryOn' },
-                { id: crypto.randomUUID(), name: '手機/充電器/行動電源', checked: false, type: 'carryOn' },
+                { id: crypto.randomUUID(), name: '護照', checked: false, type: 'carryOn' },
+                { id: crypto.randomUUID(), name: '手機', checked: false, type: 'carryOn' },
+                { id: crypto.randomUUID(), name: '充電器', checked: false, type: 'carryOn' },
+                { id: crypto.randomUUID(), name: '行動電源', checked: false, type: 'carryOn' },
                 { id: crypto.randomUUID(), name: '日幣現金/信用卡', checked: false, type: 'carryOn' },
+                
+                
+                
                 { id: crypto.randomUUID(), name: '漫遊/esim/sim', checked: false, type: 'carryOn' }
             ],
             checkedBaggage: [
