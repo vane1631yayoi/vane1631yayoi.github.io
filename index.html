@@ -498,7 +498,7 @@
          */
         window.handleLuggageSnapshot = function(docSnapshot) {
             const modalFooter = document.getElementById('modal-footer');
-            
+            const contentArea = document.getElementById('modal-content-area'); 
 
             if (docSnapshot.exists()) {
                 const data = docSnapshot.data().checklists;
@@ -604,6 +604,7 @@
          */
         window.openLuggageChecklist = function(show) {
             const modal = document.getElementById('luggage-checklist-modal');
+            const contentArea = document.getElementById('modal-content-area'); 
             
             if (show) {
                 currentPersonId = null; // 重置到人名列表視圖
