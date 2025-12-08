@@ -316,11 +316,7 @@
             
             <!-- 內容區：動態切換顯示人名列表或個人清單 -->
             <div id="modal-content-area">
-                <!-- 預設顯示載入狀態，直到 Firestore 回傳資料為止 -->
-                <div class="text-center p-8">
-                    <div class="spinner mx-auto mb-4"></div>
-                    <p class="text-gray-600">正在載入資料中...</p>
-                </div>
+                
             </div>
 
             <!-- 時間戳記與狀態顯示 (固定在底部) -->
@@ -485,11 +481,12 @@
 
         // 預設的五個人名及 ID
         const initialPeopleData = {
-            'person_a': { name: '約翰', data: LUGGAGE_CHECKLIST_TEMPLATE },
-            'person_b': { name: '瑪麗', data: LUGGAGE_CHECKLIST_TEMPLATE },
-            'person_c': { name: '大衛', data: LUGGAGE_CHECKLIST_TEMPLATE },
-            'person_d': { name: '小美', data: LUGGAGE_CHECKLIST_TEMPLATE },
-            'person_e': { name: '領隊', data: LUGGAGE_CHECKLIST_TEMPLATE }
+
+            'person_a': { name: '張達聰', data: JSON.parse(JSON.stringify(LUGGAGE_CHECKLIST_TEMPLATE)) },
+            'person_b': { name: '陳美雪', data: JSON.parse(JSON.stringify(LUGGAGE_CHECKLIST_TEMPLATE)) },
+            'person_c': { name: '張雯鈞', data: JSON.parse(JSON.stringify(LUGGAGE_CHECKLIST_TEMPLATE)) },
+            'person_d': { name: '張容瑄', data: JSON.parse(JSON.stringify(LUGGAGE_CHECKLIST_TEMPLATE)) },
+            'person_e': { name: '張紘倫', data: JSON.parse(JSON.stringify(LUGGAGE_CHECKLIST_TEMPLATE)) }
         };
 
         let PEOPLE_LUGGAGE_STATE = initialPeopleData; // 儲存所有人的狀態
