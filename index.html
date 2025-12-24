@@ -829,7 +829,7 @@
          * @param {string} locationQuery - 地點名稱 (e.g., "Nagoya, JP")
          * @returns {Promise<Object|null>} 包含天氣描述和溫度的物件，或 null (如果失敗)
          */
-        sync function fetchWeatherData(locationQuery) {
+        async function fetchWeatherData(locationQuery) {
             if (!OPENWEATHER_API_KEY || OPENWEATHER_API_KEY === "YOUR_OPENWEATHERMAP_API_KEY") {
                 console.warn("OpenWeatherMap API Key is not set. Please replace 'YOUR_OPENWEATHERMAP_API_KEY' with your actual key.");
                 return null;
