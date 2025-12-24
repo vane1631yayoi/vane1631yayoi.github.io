@@ -907,7 +907,7 @@
                 // 如果沒有指定 locationForWeather，則使用 travelItinerary 中預設的 weather 屬性
                 const weatherDisplayElement = document.getElementById(`weather-display-${dayIndex}`);
                 if (weatherDisplayElement) {
-                    const [description, tem[] = dayPlan.weather.split(',').map(s => s.trim());
+                    const [description, temp] = dayPlan.weather.split(',').map(s => s.trim());
                     const defaultIcon = (description.includes("晴") || description.includes("clear")) ? '☀️' : '❓';
                     weatherDisplayElement.innerHTML = `
                         <p class="text-4xl text-yellow-500">${defaultIcon}</p>
