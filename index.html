@@ -342,6 +342,7 @@
                 date: "3/13 (五)",
                 theme: "TPE啟程與抵達名古屋",
                 weather: "晴朗, 18°C",
+                locationForWeather: "Nagoya, JP", 
                 events: [
                     { time: "15:15", activity: "桃園機場第二航廈集合", note: "請確認手機/護照/電子機票", location: "桃園國際機場 第二航廈" },
                     { time: "17:15", activity: "TPE 起飛", note: "班機代號:CI150" },
@@ -358,6 +359,7 @@
                 date: "3/14 (六)",
                 theme: "文化與歷史探索",
                 weather: "多雲, 15°C",
+                locationForWeather: "Nagoya, JP", 
                 events: [
                     { time: "8:00", activity: "早餐", note: "Komeda客多美咖啡 OR しんぱち食堂 日式烤魚早餐"},
                     { time: "9:30", activity: "名古屋科學館", note: "提前買六/日的周末環保券(可搭地鐵/巴士)", location: "名古屋科學館" },
@@ -375,6 +377,7 @@
                 date: "3/15 (日)",
                 theme: "吉卜力公園之旅(攜帶護照)",
                 weather: "晴朗, 16°C",
+                locationForWeather: "Nagoya, JP",
                 events: [
                     { time: "7:00", activity: "早餐", note: "便利商店 OR 前一天先買" },
                     { time: "7:30", activity: "名古屋車站 --> 藤丘(東山線) --> 愛地球紀念公園(LINIMO)", note: "使用周末環保券+SUICA", location: "名古屋車站" },
@@ -394,6 +397,7 @@
                 date: "3/16 (一)",
                 theme: "犬山城之旅",
                 weather: "多雲, 15°C",
+                locationForWeather: "Nagoya, JP",
                 events: [
                     { time: "8:20", activity: "早餐 + 參加六之市", note: "刷SUICA搭名鐵線到 本笠寺(4號月台)", location: "笠寺観音（笠覆寺）"  },
                     { time: "9:00", activity: "Workman採買防水裝備", note: "防水鞋/ 防風防水外套", location: "ワークマン 名古屋笠寺店" },
@@ -430,6 +434,7 @@
                 date: "3/18 (三)",
                 theme: "市集+逛街日",
                 weather: "晴朗, 17°C",
+                locationForWeather: "Nagoya, JP",
                 events: [
                     { time: "7:50", activity: "早餐", note: "我先提早去排隊", location: "天然酵母の食パン専門店 つばめパン＆Milk 名駅店" },
                     { time: "9:30", activity: "大須觀音骨董市集 + 商圈", note: "青柳總本家/築地銀章魚/覺王山水果大福/osu bakery", location: "大須観音" },
@@ -446,6 +451,7 @@
                 shortDate: "3/19",
                 theme: "👋 歸程日",
                 weather: "晴朗, 19°C",
+                locationForWeather: "Nagoya, JP",
                 events: [
                     { time: "8:00", activity: "Check out", note: "檢查手機錢包護照 & 行李秤重" },
                     { time: "8:30", activity: "搭乘名鐵特急(部分對號座)名古屋機", note: "可刷suica坐自由座" },
@@ -801,6 +807,60 @@
         const container = document.getElementById('itinerary-container');
         const tabsContainer = document.getElementById('day-tabs');
 
+        // ==== 修正：新增天氣 API 相關變數和函數 ====
+        const OPENWEATHER_API_KEY = "YOUR_OPENWEATHERMAP_API_KEY"; // **請替換為您的 OpenWeatherMap API Key**
+        const weatherCache = {}; // 用於快取天氣資料，避免重複請求
+
+        // OpenWeatherMap 的天氣圖標映射 (簡化版)
+        const weatherIcons = {
+            '01d': '☀️', '01n': '🌙', // clear sky
+            '02d': '🌤️', '02n': '☁️', // few clouds
+            '03d': '☁️', '03n': '☁️', // scattered clouds 
+            '04d': '☁️', '04n': '☁️', // broken clouds
+            '09d': '🌧️', '09n': '🌧️', // shower rain
+            '10d': '🌦️', '10n': '🌧️', // rain
+            '11d': '⛈️', '11n': '⛈️', // thunderstorm
+            '13d': '❄️', '13n': '❄️', // snow
+            '50d': '🌫️', '50n': '🌫️'  // mist
+        };            
+
+        /**
+         * 根據地點獲取即時天氣資料
+         * @param {string} locationQuery - 地點名稱 (e.g., "Nagoya, JP")
+         * @returns {Promise<Object|null>} 包含天氣描述和溫度的物件，或 null (如果失敗)
+         */
+        sync function fetchWeatherData(locationQuery) {
+            if (!OPENWEATHER_API_KEY || OPENWEATHER_API_KEY === "YOUR_OPENWEATHERMAP_API_KEY") {
+                console.warn("OpenWeatherMap API Key is not set. Please replace 'YOUR_OPENWEATHERMAP_API_KEY' with your actual key.");
+                return null;
+            }
+            if (weatherCache[locationQuery]) {
+                return weatherCache[locationQuery];
+            }
+            try:
+                const reponse = await fetch(
+                    `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(locationQuery)}&appid=${OPENWEATHER_API_KEY}&units=metric&lang=zh_tw`
+                );
+                if (!response.ok) {
+                    thriw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+
+                const weatherInfo = {
+                    description: datd.weather[0].description,
+                    temperature: Matyh.round(data.main.temp),
+                    icon: weatherIcons[data.reather[0].icon] || '❓' // 使用圖標映射
+                };
+                weatherCache[locationQuery] = weatherInfo; // 快取資料
+                return weatherInfo;   
+        } catch (error) {
+            console.error(`Failed to fetch weather for ${locationQuery}:`, error);
+                return null;
+            }
+        }
+                
+
+        
         /**
          * 渲染特定日期的行程
          * @param {number} dayIndex - 行程在 travelItinerary 陣列中的索引 (0 = Day 1)
