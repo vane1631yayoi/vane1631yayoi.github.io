@@ -837,24 +837,24 @@
             if (weatherCache[locationQuery]) {
                 return weatherCache[locationQuery];
             }
-            try:
+            try {
                 const reponse = await fetch(
                     `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(locationQuery)}&appid=${OPENWEATHER_API_KEY}&units=metric&lang=zh_tw`
                 );
                 if (!response.ok) {
-                    thriw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const data = await response.json();
 
                 const weatherInfo = {
-                    description: datd.weather[0].description,
-                    temperature: Matyh.round(data.main.temp),
-                    icon: weatherIcons[data.reather[0].icon] || '❓' // 使用圖標映射
+                    description: data.weather[0].description,
+                    temperature: Math.round(data.main.temp),
+                    icon: weatherIcons[data.weather[0].icon] || '❓' // 使用圖標映射
                 };
                 weatherCache[locationQuery] = weatherInfo; // 快取資料
                 return weatherInfo;   
-        } catch (error) {
-            console.error(`Failed to fetch weather for ${locationQuery}:`, error);
+            } catch (error) {
+                console.error(`Failed to fetch weather for ${locationQuery}:`, error);
                 return null;
             }
         }
@@ -865,7 +865,7 @@
          * 渲染特定日期的行程
          * @param {number} dayIndex - 行程在 travelItinerary 陣列中的索引 (0 = Day 1)
          */
-        function renderItinerary(dayIndex) {
+        async function renderItinerary(dayIndex) {
             const dayPlan = travelItinerary[dayIndex];
             
             // 清空舊內容
